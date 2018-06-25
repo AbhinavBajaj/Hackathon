@@ -20,7 +20,7 @@ from keras.layers.convolutional import MaxPooling1D
 # In[2]:
 
 
-# load doc into memory
+# returns text from file
 def load_doc(filename):
     # open the file as read only
     file = open(filename, 'r')
@@ -34,7 +34,7 @@ def load_doc(filename):
 # In[3]:
 
 
-# turn a doc into clean tokens
+# returns tokens from doc that are in vocab
 def clean_doc(doc, vocab):
     # split into tokens by white space
     tokens = doc.split()
@@ -50,21 +50,8 @@ def clean_doc(doc, vocab):
 # In[4]:
 
 
-# load doc and add to vocab
-def add_doc_to_vocab(filename, vocab):
-    # load doc
-    doc = load_doc(filename)
-    # clean doc
-    tokens = clean_doc(doc)
-    # update counts
-    vocab.update(tokens)
-
-
-# In[5]:
-
-
-# load all docs in a directory
-# load all docs in a directory
+# load_doc and clean_doc to return docuemnt with tokens
+# will process based on if conditions
 def process_docs(directory, vocab, is_trian):
 	documents = list()
 	# walk through all files in the folder
@@ -85,47 +72,32 @@ def process_docs(directory, vocab, is_trian):
 	return documents
 
 
-# In[6]:
+# In[5]:
 
 
-def save_list(lines, filename):
-    # convert lines to a single blob of text
-    data = '\n'.join(lines)
-    # open file
-    file = open(filename, 'w')
-    # write text
-    file.write(data)
-    # close file
-    file.close()
-
-
-# In[7]:
-
-
-# load the vocabulary
+# parses vocab.txt and creates a set of vocab words
 vocab_filename = 'vocab.txt'
 vocab = load_doc(vocab_filename)
 vocab = vocab.split()
 vocab = set(vocab)
 
 
-# In[8]:
+# In[6]:
 
 
-# load all training reviews
+# tokenize and create positive_docs and negative_docs from training docs
 positive_docs = process_docs('txt_sentoken/pos', vocab, True)
 negative_docs = process_docs('txt_sentoken/neg', vocab, True)
 train_docs = negative_docs + positive_docs
 
 
-# In[9]:
+# In[7]:
 
 
 # create the tokenizer
 tokenizer = Tokenizer()
 # fit the tokenizer on the documents
 tokenizer.fit_on_texts(train_docs)
-
 # sequence encode
 encoded_docs = tokenizer.texts_to_sequences(train_docs)
 # pad sequences
@@ -135,7 +107,7 @@ Xtrain = pad_sequences(encoded_docs, maxlen=max_length, padding='post')
 ytrain = array([0 for _ in range(900)] + [1 for _ in range(900)])
 
 
-# In[10]:
+# In[8]:
 
 
 # load all test reviews
@@ -148,12 +120,11 @@ encoded_docs = tokenizer.texts_to_sequences(test_docs)
 Xtest = pad_sequences(encoded_docs, maxlen=max_length, padding='post')
 # define test labels
 ytest = array([0 for _ in range(100)] + [1 for _ in range(100)])
-
 # define vocabulary size (largest integer value)
 vocab_size = len(tokenizer.word_index) + 1
 
 
-# In[11]:
+# In[ ]:
 
 
 # define model
@@ -167,14 +138,14 @@ model.add(Dense(1, activation='sigmoid'))
 print(model.summary())
 # compile network
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-# fit network
+# fit and train with training data for X epochs
 model.fit(Xtrain, ytrain, epochs=10, verbose=2)
 
 
-# In[12]:
+# In[ ]:
 
 
-# evaluate
+# evaluate and calc perc with test data
 loss, acc = model.evaluate(Xtest, ytest, verbose=0)
 print('Test Accuracy: %f' % (acc*100))
 
